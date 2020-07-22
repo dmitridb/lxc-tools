@@ -48,7 +48,7 @@ chmod 755 /usr/local/sbin/destroy-container
 echo "Enabling ip-forwarding"
 echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 /usr/sbin/sysctl -p
-echo "Use new-container command to setup a new debian-scretch container"
+echo "Use new-container command to setup a new container"
 if [ -f /etc/dnsmasq.conf ]; then
   cp /etc/dnsmasq.conf /etc/dnsmasq.conf.bak
 fi
