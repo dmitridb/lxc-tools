@@ -25,25 +25,25 @@ this was originally written for debian stretch
 
 setup-lxc.sh
 ```
-	Usage: ./setup-lxc.sh <lxc-network>
+Usage: ./setup-lxc.sh <lxc-network>
 	
-	Installs lxc and dnsmasq, configures bridge interface, network, nat
-	and places commands new-container and destroy-container in 
-    /usr/local/sbin
+Installs lxc and dnsmasq, configures bridge interface, network, nat
+and places commands new-container and destroy-container in 
+/usr/local/sbin
 
-	Asumes root, and a clean system (f.e. it will overwrite /etc/dnsmasq.conf)
+Asumes root, and a clean system (f.e. it will overwrite /etc/dnsmasq.conf)
 ```
 
 new-container
 ```
-    Usage: new-container <distro> <release> <containername>
+Usage: new-container <distro> <release> <containername>
 
-    Sets up a new container given the distro, release, and name of container
+Sets up a new container given the distro, release, and name of container
 ```
 
 destroy-container
 ```
-    destroy-container <containername>
+destroy-container <containername>
 
-    Stops and removes a container.
+Stops and removes a container.
 ```
