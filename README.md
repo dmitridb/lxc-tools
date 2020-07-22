@@ -1,4 +1,4 @@
-#lxc-tools
+# lxc-tools
 
 Dead simple scripts for creating and destroying LXC containers on 
 (so far only) debian-based distros
@@ -16,7 +16,7 @@ the steps necessary to remove systemd on the containers.
 
 This is still a work in progress...
 
-##TO-DO:
+## TO-DO:
 Getting it to work on distros that aren't popos and debian, with out of
 the box support for non-debian/ubuntu containers as well
 
