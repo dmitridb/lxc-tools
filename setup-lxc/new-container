@@ -1,0 +1,92 @@
+#!/usr/bin/perl -W
+use strict;
+use warnings;
+
+my $mynet='NETWORK';
+my $myif='lxc-bridge-nat';
+my @ips=['zero','bridge'];
+local *DB;
+
+if($#ARGV != 2){
+    print "Usage: $0 <distro> <version> <containername>\n";
+    exit(1);
+}
+
+if(-e "/var/lib/lxc/ips"){
+    open(DB,"/var/lib/lxc/ips");
+    while(defined(my $ip=<DB>)){
+        print "$ip";
+        my @TMP=split(/,/,$ip);
+        # into a list
+        @TMP=split(/\./,$TMP[0]);
+        $ips[$TMP[3]]='taken';
+    }
+    close(DB);
+}
+my $nextip=2; 
+while(defined($ips[$nextip])){
+    $nextip++;
+}
+if($nextip>254){
+	print "More than 254 IPs in use, script assumes class-c, sorry\n"; exit(1); 
+}
+print "Next free IP: $mynet.$nextip\n";
+if(-e "/var/lib/lxc/$ARGV[2]"){ print "Container $ARGV[2] already exists.\n"; exit(1); }
+if(! -f "/var/lib/lxc/ips"){
+    print "Creating lxc rootfs for first time, will take some time...\n";
+}
+
+print "Creating new container $ARGV[2] with OS $ARGV[0] $ARGV[1]\n";
+`lxc-create -t download -n $ARGV[2] -- -d $ARGV[0] -r $ARGV[1] -a amd64`;
+print "Writing network config\n";
+open(DB, ">> /var/lib/lxc/$ARGV[2]/config");
+print DB "lxc.net.0.type = veth
+lxc.net.0.flags = up
+lxc.net.0.link = $myif
+lxc.net.0.name = eth0
+lxc.net.0.ipv4.address = $mynet.$nextip/24
+lxc.net.0.ipv4.gateway = $mynet.1
+lxc.include = /usr/share/lxc/config/debian.common.conf
+";
+close(DB);
+# This is necessary for godforsaken ubuntu containers because it doesn't come with this dir
+# and trying to create /etc/network/interfaces in a dir that doesn't exist will sadly fail
+if ( ! -d "/var/lib/lxc/$ARGV[2]/rootfs/etc/network") {
+    mkdir("/var/lib/lxc/$ARGV[2]/rootfs/etc/network", 755);
+}
+open(DB, "> /var/lib/lxc/$ARGV[2]/rootfs/etc/network/interfaces");
+print DB "
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+    address $mynet.$nextip
+    netmask 255.255.255.0
+    gateway $mynet.1
+";
+close(DB);
+`echo nameserver $mynet.1 > /var/lib/lxc/$ARGV[2]/rootfs/etc/resolv.conf`;
+`echo $mynet.$nextip,$ARGV[2] >> /var/lib/lxc/ips`;
+
+print "Removing Systemd\n";
+`lxc-start -d -n $ARGV[2]`;
+`lxc-attach -n $ARGV[2] -- /usr/bin/apt-get update`;
+`lxc-attach -n $ARGV[2] -- /usr/bin/apt-get install -y --no-install-recommends apt-utils`;
+`lxc-attach -n $ARGV[2] -- /usr/bin/apt-get -y install sysvinit-core`;
+`lxc-attach -n $ARGV[2] -- /bin/cp /usr/share/sysvinit/inittab /etc/inittab`;
+`lxc-stop -n $ARGV[2]`;
+`lxc-start -d -n $ARGV[2]`;
+`lxc-attach -n $ARGV[2] -- /usr/bin/apt-get -y remove --purge --auto-remove systemd*`;
+print "Make sure it gets not reinstalled\n";
+`echo 'Package: systemd\nPin: release *\nPin-Priority: -1' > /var/lib/lxc/$ARGV[2]/rootfs/etc/apt/preferences.d/systemd`;
+
+print "Do you want to start this one at system boot? [y|N]:\n";
+my $input = <STDIN>;
+chomp $input;
+if($input eq 'y'){
+    print "Setting autostart for container\n";
+    `echo lxc.start.auto = 1 >> /var/lib/lxc/$ARGV[2]/config`;
+}
+print "Add done. You can attach to $ARGV[2] with 'lxc-attach -n $ARGV[2]' now. Internal IP: $mynet.$nextip\n";
+exit(0);
