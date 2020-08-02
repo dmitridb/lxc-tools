@@ -37,7 +37,8 @@ if(! -f "/var/lib/lxc/ips"){
 }
 
 print "Creating new container $ARGV[2] with OS $ARGV[0] $ARGV[1]\n";
-`lxc-create -t download -n $ARGV[2] -- -d $ARGV[0] -r $ARGV[1] -a amd64`;
+my $output = `lxc-create -t download -n $ARGV[2] -- -d $ARGV[0] -r $ARGV[1] -a amd64`;
+print "$output\n";
 print "Writing network config\n";
 open(DB, ">> /var/lib/lxc/$ARGV[2]/config");
 print DB "lxc.net.0.type = veth
