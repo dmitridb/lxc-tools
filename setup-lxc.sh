@@ -17,6 +17,11 @@ if [ "${NETWORK[3]}" != "0" ]; then
 	echo "lxc-network needs to end with .0"
 	exit 1
 fi
+# debian without sudo pre-installed doesn't source /etc/profile as hoped
+# when you just su into root, therefore this is in here to make sure of it
+if [ "$(id -u)" -eq 0 ]; then
+    source /etc/profile
+fi
 
 DEFIF=`ip route show |grep default|cut -d " " -f 5`
 echo "USING $DEFIF as outgoing"
@@ -37,7 +42,7 @@ iface lxc-bridge-nat inet static
         netmask 255.255.255.0
         up iptables -t nat -A POSTROUTING -o $DEFIF -s $1/24 -j MASQUERADE
 EOF
-/usr/sbin/ifup lxc-bridge-nat
+ifup lxc-bridge-nat
 echo "Installing /usr/local/sbin/new-container"
 cat setup-lxc/new-container | sed "s/NETWORK/${NETWORK[0]}\.${NETWORK[1]}\.${NETWORK[2]}/" > /usr/local/sbin/new-container
 chmod 755 /usr/local/sbin/new-container
@@ -47,7 +52,7 @@ chmod 755 /usr/local/sbin/destroy-container
 #chmod 755 /usr/local/sbin/new-pihole
 echo "Enabling ip-forwarding"
 echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
-/usr/sbin/sysctl -p
+sysctl -p
 echo "Use new-container command to setup a new container"
 if [ -f /etc/dnsmasq.conf ]; then
   cp /etc/dnsmasq.conf /etc/dnsmasq.conf.bak
@@ -59,5 +64,5 @@ bind-interfaces
 EOF
 # TODO: Add determination whether host machine is your laptop on systemd or server on sysvinit
 # /etc/init.d/dnsmasq restart
-/usr/sbin/service dnsmasq restart
+service dnsmasq restart
 echo "dnsmasq installed, script complete"
