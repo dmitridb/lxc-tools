@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-die "Must run as root\n" if $> != 0;
+die "This script must be run as root\n" if $> != 0;
 
 my $mynet='NETWORK';
 my $myif='lxc-bridge-nat';
