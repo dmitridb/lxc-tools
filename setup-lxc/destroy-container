@@ -7,8 +7,11 @@ if [ `whoami` != "root" ]; then
     echo "This script must be run as root"
     exit 1
 fi
-echo "Stopping container $1..."
-lxc-stop -n $1
+lxcinfo=$(lxc-info $1 | grep "State\:" | awk ' BEGIN { FS = "          " } ; { print $2 }')
+if [ $lxcinfo = "RUNNING" ]; then
+    echo "Stopping container $1..."
+    lxc-stop -n $1
+fi
 echo "Destroying container $1..."
 lxc-destroy -n $1
 echo "Removing IP address of container $1 from /var/lib/lxc/ips..."
