@@ -49,6 +49,9 @@ chmod 755 /usr/local/sbin/new-container
 echo "Installing /usr/local/sbin/destroy-container"
 cp setup-lxc/destroy-container /usr/local/sbin
 chmod 755 /usr/local/sbin/destroy-container
+echo "Installing /usr/local/sbin/infoall-container"
+cp setup-lxc/infoall-container /usr/local/sbin
+chmod 755 /usr/local/sbin/infoall-container
 #chmod 755 /usr/local/sbin/new-pihole
 echo "Enabling ip-forwarding"
 echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
