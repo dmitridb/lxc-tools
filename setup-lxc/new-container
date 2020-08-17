@@ -42,14 +42,20 @@ print "Creating new container $ARGV[2] with OS $ARGV[0] $ARGV[1]\n";
 # Checking if BTRFS...
 my $btrfs_check = `stat --format=%i /var/lib/lxc`;
 my $output = '';
+my $retcode = 0;
 if($btrfs_check == 256) {
     print "Creating lxc container with btrfs backing store...\n";
     $output = `lxc-create -B btrfs -t download -n $ARGV[2] -- -d $ARGV[0] -r $ARGV[1] -a amd64`;
+    $retcode = $?;
+
 } else {
     print "Creating lxc container with default dir backing store...\n";
     $output = `lxc-create -t download -n $ARGV[2] -- -d $ARGV[0] -r $ARGV[1] -a amd64`;
+    $retcode = $?;
 }
 print "$output\n";
+die "lxc-create returned non-zero exit code: $retcode" if $retcode != 0;
+
 print "Writing network config\n";
 open(DB, ">> /var/lib/lxc/$ARGV[2]/config");
 print DB "lxc.net.0.type = veth
@@ -90,7 +96,7 @@ print "Removing Systemd\n";
 `lxc-stop -n $ARGV[2]`;
 `lxc-start -d -n $ARGV[2]`;
 `lxc-attach -n $ARGV[2] -- /usr/bin/apt-get -y remove --purge --auto-remove systemd*`;
-print "Make sure it gets not reinstalled\n";
+print "Making sure systemd doesn't get reinstalled\n";
 `echo 'Package: systemd\nPin: release *\nPin-Priority: -1' > /var/lib/lxc/$ARGV[2]/rootfs/etc/apt/preferences.d/systemd`;
 
 print "Do you want to start this one at system boot? [y|N]:\n";

@@ -7,8 +7,8 @@ if [ `whoami` != "root" ]; then
     echo "This script must be run as root"
     exit 1
 fi
-lxcinfo=$(lxc-info $1 | grep "State\:" | awk ' BEGIN { FS = "          " } ; { print $2 }')
-if [ $lxcinfo = "RUNNING" ]; then
+LXCINFO=$(lxc-info $1 | grep "State\:" | awk ' BEGIN { FS = "          " } ; { print $2 }')
+if [ $LXCINFO = "RUNNING" ]; then
     echo "Stopping container $1..."
     lxc-stop -n $1
 fi
